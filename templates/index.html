@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Code Viewer{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <h1>NMS-500 &middot; National Masonry Standard <span class="ed-tag">2026 Edition</span></h1>
+  <p class="page-sub">
+    Every highlighted clause below is traceable to a specific proposal record —
+    click any highlighted passage to see the full history, correspondence, and vote.
+  </p>
+  <div class="stat-row">
+    <a href="/repository?status=accepted" class="stat-chip stat-accepted">
+      <strong>{{ count_accepted }}</strong> Accepted changes
+    </a>
+    <a href="/repository?status=under_review" class="stat-chip stat-review">
+      <strong>{{ count_review }}</strong> Under review
+    </a>
+    <a href="/repository?status=declined" class="stat-chip stat-declined">
+      <strong>{{ count_declined }}</strong> Declined (archive)
+    </a>
+  </div>
+</div>
+
+<div class="code-layout">
+
+  <aside class="code-toc">
+    <div class="toc-label">Jump to</div>
+    <div class="toc-filters" role="tablist">
+      <button type="button" class="toc-filter active" data-filter="all">Full code</button>
+      <button type="button" class="toc-filter toc-filter-acc" data-filter="acc">Accepted</button>
+      <button type="button" class="toc-filter toc-filter-rev" data-filter="rev">Under review</button>
+    </div>
+
+    <div class="toc-label toc-label-spaced">Chapters</div>
+    <nav id="toc-nav">
+      {% for ch in chapters %}
+      <a href="#{{ ch.id }}" class="toc-chapter" data-has-acc="{{ 'true' if ch.has_acc else 'false' }}" data-has-rev="{{ 'true' if ch.has_rev else 'false' }}">
+        {{ ch.number }} — {{ ch.title }}
+      </a>
+      <div class="toc-sections">
+        {% for sec in ch.sections %}
+        <a href="#{{ sec.id }}" class="toc-section-link" data-has-acc="{{ 'true' if sec.has_acc else 'false' }}" data-has-rev="{{ 'true' if sec.has_rev else 'false' }}">
+          <span class="toc-dot {{ 'toc-dot-acc' if sec.has_acc else ('toc-dot-rev' if sec.has_rev else '') }}"></span>
+          {{ sec.id }}
+        </a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </nav>
+
+    <div class="toc-label toc-label-spaced">Contribute</div>
+    <details class="side-panel" id="submit-proposal">
+      <summary>+ Submit new proposal</summary>
+      <form method="post" action="/submit-proposal" enctype="multipart/form-data" class="submit-form">
+        <label>Title
+          <input type="text" name="title" required maxlength="160" placeholder="Short title of the proposed change">
+        </label>
+        <label>Code section
+          <select name="code_section" id="code-section-select" required>
+            <option value="">Select a section…</option>
+            {% for s in all_sections %}
+            <option value="{{ s.id }}">{{ s.label }}</option>
+            {% endfor %}
+            <option value="__other__">Other / propose a new section…</option>
+          </select>
+        </label>
+        <input type="text" name="custom_section" id="custom-section-input" placeholder="e.g. 9.1" class="hidden-field">
+        <label>Submitted by
+          <input type="text" name="submitted_by" maxlength="120" placeholder="Your name / organization">
+        </label>
+        <label>Summary
+          <textarea name="summary" required rows="3" placeholder="What is the proposed change, and why?"></textarea>
+        </label>
+        <label>Current code text <span class="opt">(optional)</span>
+          <textarea name="old_text" rows="2" placeholder="Existing language this would replace, if any"></textarea>
+        </label>
+        <label>Proposed text
+          <textarea name="proposed_text" required rows="3" placeholder="Suggested replacement or new language"></textarea>
+        </label>
+        <label>Attachment <span class="opt">(optional — pdf, doc, image, spreadsheet)</span>
+          <input type="file" name="attachment">
+        </label>
+        <button type="submit" class="submit-btn">Submit for review</button>
+        <p class="submit-note">Submissions appear immediately in the Under Review queue, marked as pending committee assignment.</p>
+      </form>
+    </details>
+
+    <div class="toc-label toc-label-spaced">Ask the code</div>
+    <div class="query-panel">
+      <input type="text" id="query-input" placeholder='e.g. "changes to section 3 in the last 5 years"'>
+      <button type="button" id="query-btn">Ask</button>
+      <p class="query-hint">Try: "how many proposals were declined", "changes to chapter 5 since 2023", "last three accepted changes"</p>
+    </div>
+  </aside>
+
+  <article class="code-doc">
+    <div id="query-results" class="query-results hidden-field"></div>
+    {% for ch in chapters %}
+    <section class="code-chapter" id="{{ ch.id }}">
+      <h2>{{ ch.number }} — {{ ch.title }}</h2>
+      {% for sec in ch.sections %}
+      <div class="code-section" id="{{ sec.id }}" data-has-acc="{{ 'true' if sec.has_acc else 'false' }}" data-has-rev="{{ 'true' if sec.has_rev else 'false' }}">
+        <h3>{{ sec.heading }}</h3>
+        <p class="code-body">{{ sec.html | safe }}</p>
+        {% if sec.extra_proposals %}
+        <div class="pending-chip-row">
+          {% for ep in sec.extra_proposals %}
+          <a href="/proposal/{{ ep.id }}" class="pending-chip pending-{{ ep.status }}">
+            <span class="pending-chip-label">
+              {% if ep.status == 'accepted' %}Recently accepted{% else %}New proposal{% endif %}
+            </span>
+            <span class="pending-chip-title">{{ ep.title }}</span>
+            <span class="pending-chip-id">{{ ep.id }}</span>
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endfor %}
+  </article>
+
+</div>
+
+{% endblock %}

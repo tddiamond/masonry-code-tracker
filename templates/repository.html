@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Proposal Repository{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <h1>Proposal Repository</h1>
+  <p class="page-sub">
+    Every proposal ever filed against NMS-500 — accepted, under review, or declined.
+    The declined archive exists so a rejected idea's reasoning isn't lost if it comes back up in a future cycle.
+  </p>
+</div>
+
+<form class="repo-controls" method="get" action="/repository">
+  <input type="text" name="q" placeholder="Search title, section, submitter…" value="{{ query }}">
+  <div class="repo-filters">
+    <a href="/repository?status=all{{ '&q=' + query if query else '' }}" class="filter-chip {{ 'active' if status_filter == 'all' else '' }}">All</a>
+    <a href="/repository?status=accepted{{ '&q=' + query if query else '' }}" class="filter-chip filter-accepted {{ 'active' if status_filter == 'accepted' else '' }}">Accepted</a>
+    <a href="/repository?status=under_review{{ '&q=' + query if query else '' }}" class="filter-chip filter-review {{ 'active' if status_filter == 'under_review' else '' }}">Under review</a>
+    <a href="/repository?status=declined{{ '&q=' + query if query else '' }}" class="filter-chip filter-declined {{ 'active' if status_filter == 'declined' else '' }}">Declined</a>
+  </div>
+  <button type="submit" class="repo-search-btn">Search</button>
+</form>
+
+<div class="repo-list">
+  {% for p in proposals %}
+  <a href="/proposal/{{ p.id }}" class="repo-card status-{{ p.status }}">
+    <div class="repo-card-top">
+      <span class="status-pill status-{{ p.status }}">
+        {% if p.status == 'accepted' %}Accepted
+        {% elif p.status == 'under_review' %}Under review
+        {% else %}Declined{% endif %}
+      </span>
+      <span class="repo-card-id">{{ p.id }}</span>
+      <span class="repo-card-section">§ {{ p.code_section }}</span>
+    </div>
+    <h3>{{ p.title }}</h3>
+    <p class="repo-card-summary">{{ p.summary }}</p>
+    <div class="repo-card-foot">
+      <span>{{ p.submitted_by }}</span>
+      <span>Filed {{ p.date_submitted }}</span>
+      {% if p.status != 'under_review' %}<span>Decided {{ p.date_decided }}</span>{% endif %}
+    </div>
+  </a>
+  {% else %}
+  <div class="repo-empty">No proposals match that search.</div>
+  {% endfor %}
+</div>
+
+{% endblock %}

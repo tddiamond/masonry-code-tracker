@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{{ p.id }} · Proposal Detail{% endblock %}
+{% block content %}
+
+<div class="detail-back">
+  <a href="/">&larr; Back to code viewer</a>
+  <span class="dot">&middot;</span>
+  <a href="/repository">Browse repository</a>
+</div>
+
+<div class="detail-head status-{{ p.status }}">
+  <div class="detail-head-top">
+    <span class="status-pill status-{{ p.status }}">
+      {% if p.status == 'accepted' %}Accepted change
+      {% elif p.status == 'under_review' %}Under review
+      {% else %}Declined{% endif %}
+    </span>
+    <span class="detail-id">{{ p.id }}</span>
+  </div>
+  <h1>{{ p.title }}</h1>
+  <div class="detail-meta">
+    <div><span class="meta-label">Code section</span><a href="/#{{ p.code_section }}">{{ p.code_section }}</a></div>
+    <div><span class="meta-label">Chapter</span>{{ p.chapter }}</div>
+    <div><span class="meta-label">Submitted by</span>{{ p.submitted_by }}</div>
+    <div><span class="meta-label">Committee</span>{{ p.committee }}</div>
+    <div><span class="meta-label">Date submitted</span>{{ p.date_submitted }}</div>
+    {% if p.status != 'under_review' %}
+    <div><span class="meta-label">Date decided</span>{{ p.date_decided }}</div>
+    <div><span class="meta-label">Vote</span>{{ p.vote }}</div>
+    {% else %}
+    <div><span class="meta-label">Current stage</span>{{ p.stage }}</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+
+  <div class="detail-main">
+
+    <section class="detail-block">
+      <h2>Summary</h2>
+      <p>{{ p.summary }}</p>
+    </section>
+
+    {% if p.status == 'accepted' %}
+    <section class="detail-block">
+      <h2>Committee reasoning</h2>
+      <p>{{ p.reasoning }}</p>
+    </section>
+    {% elif p.status == 'under_review' %}
+    <section class="detail-block">
+      <h2>Reasoning so far</h2>
+      <p>{{ p.reasoning_so_far }}</p>
+    </section>
+    {% else %}
+    <section class="detail-block">
+      <h2>Reason declined</h2>
+      <p>{{ p.reason_declined }}</p>
+    </section>
+    {% if p.resubmission_note %}
+    <section class="detail-block resubmission">
+      <h2>If revisited</h2>
+      <p>{{ p.resubmission_note }}</p>
+    </section>
+    {% endif %}
+    {% endif %}
+
+    <section class="detail-block">
+      <h2>Text comparison</h2>
+      <div class="text-compare">
+        <div class="text-col text-old">
+          <div class="text-col-label">{% if p.status == 'accepted' %}Prior text{% else %}Current text{% endif %}</div>
+          <p>{{ p.old_text }}</p>
+        </div>
+        <div class="text-col text-new">
+          <div class="text-col-label">{% if p.status == 'accepted' %}Adopted text{% elif p.status == 'under_review' %}Proposed text{% else %}Proposed text (not adopted){% endif %}</div>
+          <p>{{ p.new_text or p.proposed_text }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-block">
+      <h2>Full correspondence</h2>
+      <div class="correspondence">
+        {% for c in p.correspondence %}
+        <div class="corr-entry">
+          <div class="corr-meta">
+            <span class="corr-date">{{ c.date }}</span>
+            <span class="corr-author">{{ c.author }}</span>
+            <span class="corr-role">{{ c.role }}</span>
+          </div>
+          <p class="corr-message">{{ c.message }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+  </div>
+
+  <aside class="detail-side">
+    <div class="side-card">
+      <h3>Where this appears in the code</h3>
+      <a class="side-link" href="/#{{ p.code_section }}">Section {{ p.code_section }} &rarr;</a>
+    </div>
+  </aside>
+
+</div>
+
+{% endblock %}
